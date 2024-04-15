@@ -45,7 +45,14 @@ tree = BinaryTree()
 
 @app.route('/insert', methods=['POST'])
 def insert():
-    key = request.json['key']
+    data = request.get_json()  # Obter os dados JSON da requisição
+    key = data['key']
+    if not isinstance(key, int):  # Verificar se a chave é um inteiro
+        try:
+            key = int(key)  # Tenta converter a chave para inteiro
+        except ValueError:
+            return jsonify({'error': 'Invalid key type. Key must be an integer.'}), 400
+
     tree.insert(key)
     return jsonify(success=True)
 
