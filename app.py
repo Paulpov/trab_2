@@ -10,51 +10,41 @@ class TreeNode:
         self.right = None
         self.key = key
 
-class BinaryTree:
+class SplayTree:
     def __init__(self):
         self.root = None
 
-    def insert(self, key):
-        if not self.root:
-            self.root = TreeNode(key)
-        else:
-            self._insert(self.root, key)
-
-    def _insert(self, node, key):
-        if key < node.key:
-            if node.left is None:
-                node.left = TreeNode(key)
-            else:
-                self._insert(node.left, key)
-        else:
-            if node.right is None:
-                node.right = TreeNode(key)
-            else:
-                self._insert(node.right, key)
+    # Aqui ficariam as funções rotate_right, rotate_left, splay e insert com as suas devidas lógicas
 
     def to_dict(self, node):
         if not node:
             return None
-        return {
-            'key': node.key,
-            'left': self.to_dict(node.left),
-            'right': self.to_dict(node.right)
-        }
+        children = [self.to_dict(node.left), self.to_dict(node.right)] if node.left or node.right else []
+        return {'name': str(node.key), 'children': children}
 
-tree = BinaryTree()
+tree = SplayTree()
 
 @app.route('/insert', methods=['POST'])
 def insert():
-    data = request.get_json()  # Obter os dados JSON da requisição
-    key = data['key']
-    if not isinstance(key, int):  # Verificar se a chave é um inteiro
-        try:
-            key = int(key)  # Tenta converter a chave para inteiro
-        except ValueError:
-            return jsonify({'error': 'Invalid key type. Key must be an integer.'}), 400
-
+    data = request.get_json()
+    key = data.get('key')
+    if key is None or not isinstance(key, int):
+        return jsonify({'error': 'Key is required and must be an integer.'}), 400
     tree.insert(key)
-    return jsonify(success=True)
+    return jsonify(tree.to_dict(tree.root))
+
+@app.route('/search', methods=['POST'])
+def search():
+    data = request.get_json()
+    key = data.get('key')
+    if key is None or not isinstance(key, int):
+        return jsonify({'error': 'Key is required and must be an integer.'}), 400
+
+    # Implementação do splay que atualiza uma lista de caminhos
+    path = []
+    tree.root = tree.splay(tree.root, key, path=path)
+    # Ajuste necessário na função splay para aceitar e atualizar o caminho
+    return jsonify({'path': path, 'tree': tree.to_dict(tree.root)})
 
 @app.route('/get_tree', methods=['GET'])
 def get_tree():
